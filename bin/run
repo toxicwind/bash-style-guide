@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# bash-style-guide — primary operation: bootstrap the estate bashrc (install.sh)
+# or run the guide's machine gate.
+#
+# Usage:
+#   bin/run check            # ShellCheck + LF/ASCII gate (canonical)
+#   bin/run install          # dry-run project this guide's bashrc
+#   bin/run                  # same as `check`
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+case "${1:-check}" in
+  check) exec ./bin/check ;;
+  install|bootstrap) exec ./install.sh install ;;
+  *)
+    echo "usage: bin/run [check|install]"; exit 2
+    ;;
+esac

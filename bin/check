@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# bash-style-guide — self-test gate (PASS/FAIL).
+# Documented gate: ShellCheck (warning+ blocks the PR) + LF/ASCII hygiene
+# (R-501 LF+ASCII on the Arch host). Runs shellcheck over the shipped shell
+# sources when available; always verifies the core artifacts have no CRLF.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+echo "== bash-style-guide check: start =="
+
+GATES=0
+
+# Gate 1 — ShellCheck (warning+ blocks merge), when available
+if command -v shellcheck >/dev/null 2>&1; then
+  echo "-- shellcheck (warning+) --"
+  set +e
+  out="$(shellcheck -S warning bashrc install.sh examples/good.sh 2>&1)"
+  rc=$?
+  set -e
+  echo "$out"
+  if [ "$rc" -ne 0 ]; then
+    echo "FAIL: shellcheck findings above (violate R-1401/Tooling gate)"
+    GATES=$((GATES+1))
+  fi
+else
+  echo "NOTE: shellcheck not on PATH — shell-gate skipped (source-integrity still checked)"
+fi
+
+# Gate 2 — CRLF hygiene (violates R-501 LF+ASCII)
+echo "-- LF/ASCII scan --"
+for f in bashrc install.sh examples/good.sh examples/bad.sh; do
+  if [ -f "$f" ] && grep -q $'\r' "$f"; then
+    echo "FAIL: $f contains CRLF (violates R-501)"
+    GATES=$((GATES+1))
+  fi
+done
+
+if [ "$GATES" -gt 0 ]; then
+  echo "== bash-style-guide check: FAIL =="
+  exit 1
+fi
+echo "== bash-style-guide check: PASS =="
+exit 0

@@ -201,6 +201,10 @@ if command -v ffs >/dev/null 2>&1; then
 fi
 
 # --- 11 - helpers ---
+# shellcheck disable=SC2164 # mkcd is guarded by the preceding &&; interactive cd
+# failure already propagates the last command's status, so an explicit || exit would
+# (a) return 1 with no message on transient cwd failure, and (b) differ from mkdir
+# conventions. R-1401 permits this inline disable with the required explanatory comment.
 mkcd() { mkdir -p -- "$1" && cd -- "$1"; }
 
 extract() {
